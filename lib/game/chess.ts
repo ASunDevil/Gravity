@@ -10,6 +10,7 @@ export function createInitialChessState(): ChessGameState {
     winner: null,
     history: [],
     inCheck: false,
+    lastMoveTime: Date.now(),
   };
 }
 
@@ -23,7 +24,7 @@ export function isValidChessMove(fen: string, move: { from: string; to: string; 
   }
 }
 
-export function makeChessMove(gameState: ChessGameState, move: { from: string; to: string; promotion?: string }): ChessGameState {
+export function makeChessMove(gameState: ChessGameState, move: { from: string; to: string; promotion?: string }, duration: number = 0): ChessGameState {
   const chess = new Chess(gameState.fen);
   try {
     const result = chess.move(move);
@@ -43,8 +44,9 @@ export function makeChessMove(gameState: ChessGameState, move: { from: string; t
       fen: chess.fen(),
       turn: chess.turn(),
       winner,
-      history: [...gameState.history, result.san],
+      history: [...gameState.history, { san: result.san, duration }],
       inCheck: chess.inCheck(),
+      lastMoveTime: Date.now(),
     };
   } catch (e) {
     return gameState;

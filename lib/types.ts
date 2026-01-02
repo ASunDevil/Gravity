@@ -2,15 +2,13 @@ export interface User {
   id: string; // Socket ID
   nickname: string;
   avatar: string; // Emoji or URL
+  isAi?: boolean;
 }
 
 export type PlayerColor = 'black' | 'white';
 export type GameType = 'renju' | 'chess' | 'go';
 
-export interface Player {
-  id: string;
-  nickname: string;
-  avatar: string;
+export interface Player extends User {
   color?: PlayerColor; // For Renju/Go: 'black' | 'white', For Chess: 'w' | 'b'
   ready: boolean;
 }
@@ -24,6 +22,7 @@ export interface Room {
   status: 'waiting' | 'playing' | 'ended';
   gameState?: GameState;
   createdAt: number;
+  vsAi?: boolean;
 }
 
 export interface RenjuGameState {
@@ -31,7 +30,8 @@ export interface RenjuGameState {
   board: (PlayerColor | null)[][];
   currentPlayer: PlayerColor;
   winner: PlayerColor | null | 'draw';
-  history: { x: number; y: number; color: PlayerColor }[];
+  history: { x: number; y: number; color: PlayerColor; duration: number }[];
+  lastMoveTime: number;
 }
 
 export interface ChessGameState {
@@ -39,8 +39,9 @@ export interface ChessGameState {
   fen: string;
   turn: 'w' | 'b';
   winner: 'w' | 'b' | 'draw' | null;
-  history: string[]; // SAN moves
+  history: { san: string; duration: number }[]; // Changed to object
   inCheck?: boolean;
+  lastMoveTime: number;
 }
 
 export interface GoGameState {
@@ -48,10 +49,11 @@ export interface GoGameState {
   board: (PlayerColor | null)[][]; // 19x19
   currentPlayer: PlayerColor;
   winner: PlayerColor | null | 'draw';
-  history: { x: number; y: number; color: PlayerColor }[];
+  history: { x: number; y: number; color: PlayerColor; duration: number }[];
   captured: { black: number; white: number }; // Stones captured BY that color
   previousBoard?: (PlayerColor | null)[][]; // For Simple Ko check
   passes: number; // Consecutive passes to detect game end
+  lastMoveTime: number;
 }
 
 export type GameState = RenjuGameState | ChessGameState | GoGameState;

@@ -8,7 +8,29 @@ export function createInitialState(): RenjuGameState {
     currentPlayer: 'black', // Black always moves first
     winner: null,
     history: [],
+    lastMoveTime: Date.now()
   };
+}
+
+export function makeRenjuMove(state: RenjuGameState, x: number, y: number, color: PlayerColor, duration: number): RenjuGameState {
+  const newState = { ...state };
+  newState.board = state.board.map(row => [...row]);
+  newState.board[y][x] = color;
+  newState.history = [...state.history, { x, y, color, duration }];
+
+  // Win check should be done by caller or here? Caller currently does it.
+  // Ideally we encapsulate it here. But server.ts logic is doing it.
+  // Let's just return state with updated board and history for now to match server expectation of "helper".
+  // Actually server.ts calls checkWin separately.
+
+  newState.currentPlayer = state.currentPlayer === 'black' ? 'white' : 'black';
+  newState.lastMoveTime = Date.now();
+
+  // We need to re-run checkWin here if we want full encapsulation, but server.ts handles it.
+  // server.ts expects to modify room.gameState.
+  // Let's just let server.ts handle the status update, but we return the new state structure.
+
+  return newState;
 }
 
 export function isValidMove(state: RenjuGameState, x: number, y: number): boolean {

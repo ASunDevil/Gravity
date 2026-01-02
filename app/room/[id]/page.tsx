@@ -2,6 +2,8 @@
 
 import GridBoard from '@/components/GridBoard';
 import ChessBoard from '@/components/ChessBoard';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import ThinkingTimer from '@/components/ThinkingTimer';
 import { useUser } from '@/lib/UserContext';
 import { getSocket } from '@/lib/socket';
 import { GameState, Room, Player, BOARD_SIZE, RenjuGameState, ChessGameState, GoGameState, GO_BOARD_SIZE } from '@/lib/types';
@@ -112,17 +114,19 @@ export default function RoomPage() {
     const gameType = room.gameType || 'renju';
 
     return (
-        <div className="min-h-screen bg-neutral-100 flex flex-col">
+        <div className="min-h-screen bg-background text-foreground flex flex-col transition-colors duration-300">
             {/* Header */}
-            <header className="bg-white shadow p-4 flex justify-between items-center z-20">
-                <button onClick={() => router.push('/lobby')} className="text-gray-600 hover:text-black">
-                    &larr; Leave Room
+            <header className="bg-card border-b border-border shadow-sm p-4 flex justify-between items-center z-20">
+                <button onClick={() => router.push('/lobby')} className="text-muted-foreground hover:text-foreground transition flex items-center">
+                    <span className="mr-2">←</span> Leave Room
                 </button>
                 <div className="flex flex-col items-center">
                     <h1 className="font-bold text-xl">{room.name}</h1>
-                    <span className="text-xs uppercase tracking-widest text-gray-500">{gameType}</span>
+                    <span className="text-xs uppercase tracking-widest text-muted-foreground">{gameType}</span>
                 </div>
-                <div className="w-20" />
+                <div className="w-24 flex justify-end">
+                    <ThemeSwitcher />
+                </div>
             </header>
 
             <main className="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full p-4 gap-6">
@@ -184,43 +188,74 @@ export default function RoomPage() {
                 {/* Right: Info Panel + History */}
                 <div className="w-full lg:w-96 flex flex-col gap-4">
                     {/* Players Card */}
-                    <div className="bg-white p-4 rounded-xl shadow-sm">
-                        <h3 className="font-semibold mb-4 text-gray-500 text-sm uppercase tracking-wider">Players</h3>
+                    <div className="bg-card p-4 rounded-xl shadow-sm border border-border">
+                        <h3 className="font-semibold mb-4 text-muted-foreground text-sm uppercase tracking-wider">Players</h3>
                         <div className="space-y-4">
                             {/* Me */}
-                            <div className={`p-3 rounded-lg border-2 transition ${isMyTurn ? 'border-blue-400 bg-blue-50' : 'border-transparent bg-gray-50'}`}>
+                            <div className={`p-3 rounded-lg border-2 transition ${isMyTurn ? 'border-primary bg-primary/10' : 'border-transparent bg-muted'}`}>
                                 <div className="flex items-center space-x-3">
                                     <span className="text-2xl">{me?.avatar || user.avatar}</span>
                                     <div className="flex-1">
-                                        <div className="font-medium">{me?.nickname || user.nickname} (You)</div>
-                                        <div className="text-xs text-gray-500 flex items-center gap-1">
+                                        <div className="font-medium text-card-foreground">{me?.nickname || user.nickname} (You)</div>
+                                        <div className="text-xs text-muted-foreground flex items-center gap-1">
                                             {me?.color && (
-                                                <span className={`w-3 h-3 rounded-full border border-gray-300 ${me.color === 'black' ? 'bg-black' : 'bg-white'}`} />
+                                                <span className={`w-3 h-3 rounded-full border border-border ${me.color === 'black' ? 'bg-black' : 'bg-white'}`} />
                                             )}
-                                            {me?.ready ? 'Ready' : 'Not Ready'}
+                                            {room.status === 'playing' ? (
+                                                isMyTurn ? (
+                                                    <span className="text-primary font-bold flex gap-1">Thinking <ThinkingTimer startTime={gameState?.lastMoveTime || Date.now()} /></span>
+                                                ) : (
+                                                    <span>Waiting...</span>
+                                                )
+                                            ) : room.status === 'ended' ? (
+                                                gameState?.winner === me?.color ? (
+                                                    <span className="text-green-500 font-bold">Winner!</span>
+                                                ) : gameState?.winner === 'draw' ? (
+                                                    <span className="text-yellow-500 font-bold">Draw</span>
+                                                ) : (
+                                                    <span className="text-red-500 font-bold">Loser</span>
+                                                )
+                                            ) : (
+                                                me?.ready ? <span className="text-green-500">Ready</span> : <span className="text-muted-foreground">Not Ready</span>
+                                            )}
                                         </div>
                                     </div>
-                                    {/* Capture Counts for Go? */}
                                 </div>
                             </div>
 
                             {/* Opponent */}
-                            <div className={`p-3 rounded-lg border-2 transition ${gameState && !isMyTurn && room.status === 'playing' ? 'border-blue-400 bg-blue-50' : 'border-transparent bg-gray-50'}`}>
+                            <div className={`p-3 rounded-lg border-2 transition ${gameState && !isMyTurn && room.status === 'playing' ? 'border-primary bg-primary/10' : 'border-transparent bg-muted'}`}>
                                 {opponent ? (
                                     <div className="flex items-center space-x-3">
                                         <span className="text-2xl">{opponent.avatar}</span>
                                         <div className="flex-1">
-                                            <div className="font-medium">{opponent.nickname}</div>
-                                            <div className="text-xs text-gray-500 flex items-center gap-1">
+                                            <div className="font-medium text-card-foreground">{opponent.nickname}</div>
+                                            <div className="text-xs text-muted-foreground flex items-center gap-1">
                                                 {opponent.color && (
-                                                    <span className={`w-3 h-3 rounded-full border border-gray-300 ${opponent.color === 'black' ? 'bg-black' : 'bg-white'}`} />
+                                                    <span className={`w-3 h-3 rounded-full border border-border ${opponent.color === 'black' ? 'bg-black' : 'bg-white'}`} />
                                                 )}
-                                                {opponent.ready ? 'Ready' : 'Not Ready'}
+                                                {room.status === 'playing' ? (
+                                                    !isMyTurn ? (
+                                                        <span className="text-primary font-bold flex gap-1">Thinking <ThinkingTimer startTime={gameState?.lastMoveTime || Date.now()} /></span>
+                                                    ) : (
+                                                        <span>Waiting...</span>
+                                                    )
+                                                ) : room.status === 'ended' ? (
+                                                    gameState?.winner === opponent?.color ? (
+                                                        <span className="text-green-500 font-bold">Winner!</span>
+                                                    ) : gameState?.winner === 'draw' ? (
+                                                        <span className="text-yellow-500 font-bold">Draw</span>
+                                                    ) : (
+                                                        <span className="text-red-500 font-bold">Loser</span>
+                                                    )
+                                                ) : (
+                                                    opponent.ready ? <span className="text-green-500">Ready</span> : <span className="text-muted-foreground">Not Ready</span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="text-gray-400 text-center py-2 italic">Waiting for opponent...</div>
+                                        <div className="text-muted-foreground text-center py-2 italic">Waiting for opponent...</div>
                                 )}
                             </div>
                         </div>
@@ -229,8 +264,8 @@ export default function RoomPage() {
                             <button
                                 onClick={toggleReady}
                                 className={`mt-4 w-full py-3 rounded-lg font-semibold transition ${me.ready
-                                    ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                                    : 'bg-green-600 text-white hover:bg-green-700 shadow-md transform active:scale-95'
+                                    ? 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+                                    : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md transform active:scale-95'
                                     }`}
                             >
                                 {me.ready ? 'Cancel Ready' : 'Ready to Play'}
@@ -240,22 +275,32 @@ export default function RoomPage() {
 
                     {/* Game History */}
                     {gameState && (
-                        <div className="bg-white p-4 rounded-xl shadow-sm flex-1 flex flex-col min-h-[300px]">
-                            <h3 className="font-semibold mb-2 text-gray-500 text-sm uppercase tracking-wider">Game History</h3>
+                        <div className="bg-card p-4 rounded-xl shadow-sm flex-1 flex flex-col min-h-[300px] border border-border">
+                            <h3 className="font-semibold mb-2 text-muted-foreground text-sm uppercase tracking-wider">Game History</h3>
                             <div ref={historyRef} className="flex-1 overflow-y-auto space-y-1 pr-2 max-h-[400px]">
                                 {gameState.history.length === 0 ? (
-                                    <p className="text-gray-400 text-sm italic text-center py-10">No moves yet</p>
+                                    <p className="text-muted-foreground text-sm italic text-center py-10">No moves yet</p>
                                 ) : (
                                     gameType === 'chess' ? (
                                         // Chess History
-                                        <div className="grid grid-cols-2 gap-2 text-sm">
+                                            <div className="grid grid-cols-2 gap-2 text-sm text-card-foreground">
                                             {(gameState as ChessGameState).history.map((move, i) => {
                                                 if (i % 2 === 0) {
+                                                    const whiteMove = move;
+                                                    const blackMove = (gameState as ChessGameState).history[i + 1];
                                                     return (
-                                                        <div key={i} className="flex items-center space-x-2 p-1 bg-gray-50 rounded">
-                                                            <span className="text-gray-400 w-6 text-right">{(i / 2) + 1}.</span>
-                                                            <span className="font-bold">{move}</span>
-                                                            {(gameState as ChessGameState).history[i + 1] && <span className="font-bold">{(gameState as ChessGameState).history[i + 1]}</span>}
+                                                        <div key={i} className="flex items-center space-x-2 p-1 bg-muted rounded">
+                                                            <span className="text-muted-foreground w-6 text-right">{(i / 2) + 1}.</span>
+                                                            <div className="flex flex-col">
+                                                                <span className="font-bold">{whiteMove.san}</span>
+                                                                <span className="text-[10px] text-muted-foreground">{(whiteMove.duration / 1000).toFixed(1)}s</span>
+                                                            </div>
+                                                            {blackMove && (
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-bold">{blackMove.san}</span>
+                                                                    <span className="text-[10px] text-muted-foreground">{(blackMove.duration / 1000).toFixed(1)}s</span>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     );
                                                 }
@@ -264,30 +309,24 @@ export default function RoomPage() {
                                         </div>
                                     ) : (
                                         // Renju/Go History
-                                        <table className="w-full text-sm text-left">
-                                            <thead className="text-xs text-gray-500 bg-gray-50 sticky top-0">
-                                                <tr>
-                                                    <th className="px-2 py-1">#</th>
-                                                    <th className="px-2 py-1">Player</th>
-                                                    <th className="px-2 py-1">Pos</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {(gameState as RenjuGameState | GoGameState).history.map((move, i) => (
-                                                    <tr key={i} className={`border-b border-gray-100/50 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
-                                                        <td className="px-2 py-1 text-gray-500">{i + 1}</td>
-                                                        <td className="px-2 py-1 flex items-center gap-1">
-                                                            <div className={`w-2 h-2 rounded-full ${move.color === 'black' ? 'bg-black' : 'bg-white border border-gray-300'}`} />
-                                                            {move.color === 'black' ? 'Black' : 'White'}
-                                                        </td>
-                                                        <td className="px-2 py-1 font-mono">
-                                                            {String.fromCharCode(65 + move.x + (gameType === 'go' && move.x >= 8 ? 1 : 0))}
-                                                            {gameType === 'go' ? 19 - move.y : 15 - move.y}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                                <div className="space-y-1">
+                                                    {(gameState as RenjuGameState | GoGameState).history.map((move, i) => (
+                                                <div key={i} className="flex justify-between items-center text-sm p-2 bg-muted/50 rounded hover:bg-muted transition">
+                                                    <div className="flex items-center space-x-2">
+                                                        <span className="text-muted-foreground w-6 text-right">{i + 1}.</span>
+                                                        <span className={`w-3 h-3 rounded-full ${move.color === 'black' ? 'bg-black' : 'bg-white border border-gray-300'}`}></span>
+                                                        <span className="font-mono">
+                                                            {gameType === 'renju'
+                                                                ? `${String.fromCharCode(65 + move.x)}${15 - move.y}`
+                                                                : (move.x === -1 ? 'PASS' : `${String.fromCharCode(65 + (move.x >= 8 ? move.x + 1 : move.x))}${19 - move.y}`)}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {(move.duration / 1000).toFixed(1)}s
+                                                    </span>
+                                                </div>
+                                            ))}
+                                                </div>
                                     )
                                 )}
                             </div>

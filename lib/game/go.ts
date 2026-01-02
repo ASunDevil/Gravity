@@ -11,7 +11,8 @@ export function createInitialGoState(): GoGameState {
         winner: null,
         history: [],
         captured: { black: 0, white: 0 },
-        passes: 0
+        passes: 0,
+        lastMoveTime: Date.now(),
     };
 }
 
@@ -90,7 +91,7 @@ export function isValidGoMove(state: GoGameState, x: number, y: number, color: P
 
     // Simulation for Suicide and Ko
     // We must simulate to check validity strictly
-    const simState = makeGoMove({ ...state }, x, y, color, true); // true = simulation mode
+    const simState = makeGoMove({ ...state }, x, y, color, true, 0); // true = simulation mode
 
     // If makeGoMove returns the same board object (reference check), it means move was invalid (e.g. suicide)
     // But makeGoMove creates new board reference usually.
@@ -148,7 +149,7 @@ export function isValidGoMove(state: GoGameState, x: number, y: number, color: P
     return true;
 }
 
-export function makeGoMove(state: GoGameState, x: number, y: number, color: PlayerColor, simulation = false): GoGameState {
+export function makeGoMove(state: GoGameState, x: number, y: number, color: PlayerColor, simulation = false, duration: number = 0): GoGameState {
     const opponent = color === 'black' ? 'white' : 'black';
 
     // Handle PASS
@@ -166,12 +167,13 @@ export function makeGoMove(state: GoGameState, x: number, y: number, color: Play
         return {
             ...state,
             currentPlayer: opponent,
-            history: [...state.history, { x, y, color }],
+            history: [...state.history, { x, y, color, duration }],
             passes: newPasses,
             winner,
             // Previous board doesn't change on pass? Or strictly it remains same.
             // But Ko usually relates to *board change*.
-            previousBoard: state.board
+            previousBoard: state.board,
+            lastMoveTime: Date.now(),
         };
     }
 
@@ -218,9 +220,10 @@ export function makeGoMove(state: GoGameState, x: number, y: number, color: Play
         board: newBoard,
         currentPlayer: opponent,
         winner: null,
-        history: [...state.history, { x, y, color }],
+        history: [...state.history, { x, y, color, duration }],
         captured: newCaptured,
         previousBoard: state.board, // Store state BEFORE this move (which was 'state.board')
-        passes: 0 // Reset pass count on valid move
+        passes: 0, // Reset pass count on valid move
+        lastMoveTime: Date.now(),
     };
 }

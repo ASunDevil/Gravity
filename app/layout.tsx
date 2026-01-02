@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { ThemeProvider } from '@/lib/ThemeContext';
 import { UserProvider } from '@/lib/UserContext';
 import './globals.css';
 
@@ -16,11 +17,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <UserProvider>
-          {children}
-        </UserProvider>
+        <ThemeProvider>
+          <UserProvider>
+            {children}
+          </UserProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
