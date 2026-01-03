@@ -1,5 +1,4 @@
 "use client";
-
 import GridBoard from '@/components/GridBoard';
 import ChessBoard from '@/components/ChessBoard';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';

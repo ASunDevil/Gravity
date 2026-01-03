@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/UserContext';
 import { getSocket } from '@/lib/socket';
-import { Room, User } from '@/lib/types';
+import { Room, User, GameType } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
@@ -16,7 +16,7 @@ export default function Lobby() {
     // Create Room State
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newRoomName, setNewRoomName] = useState('');
-    const [newRoomType, setNewRoomType] = useState<'renju' | 'chess' | 'go'>('renju');
+    const [newRoomType, setNewRoomType] = useState<GameType>('renju');
     const [playerColor, setPlayerColor] = useState<'black' | 'white' | 'random'>('random');
     const [isCreating, setIsCreating] = useState(false);
     const [isAiMode, setIsAiMode] = useState(false);
@@ -169,7 +169,7 @@ export default function Lobby() {
 
                         <div className="mb-6">
                             <label className="block text-sm font-semibold text-muted-foreground mb-2">Game Type</label>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-2 gap-4">
                                 <button
                                     onClick={() => setNewRoomType('renju')}
                                     className={`p-3 rounded-lg border-2 flex flex-col items-center justify-center transition-all ${newRoomType === 'renju' ? 'border-primary bg-primary/5 text-primary' : 'border-border hover:border-primary/50 text-muted-foreground'}`}

@@ -21,7 +21,7 @@ export default function Home() {
           GRAVITY
         </h1>
         <p className="text-blue-100 text-lg">
-          Experience the elegance of Renju.
+          Experience the elegance of board games.
         </p>
         
         <div className="space-y-4">

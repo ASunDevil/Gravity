@@ -4,8 +4,8 @@ import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';
 import { Server } from 'socket.io';
-import { GameState, Player, Room, User, BOARD_SIZE, GameType, RenjuGameState, ChessGameState, PlayerColor } from './lib/types';
-import { createInitialState, isValidMove, checkWin, makeRenjuMove } from './lib/game/renju';
+import { GameState, Player, Room, User, BOARD_SIZE, GameType, RenjuGameState, ChessGameState, GoGameState, PlayerColor } from './lib/types';
+import { createInitialState as createInitialRenjuState, isValidMove, checkWin, makeRenjuMove } from './lib/game/renju';
 import { createInitialChessState, makeChessMove } from './lib/game/chess';
 import { createInitialGoState, makeGoMove, isValidGoMove, GO_BOARD_SIZE } from './lib/game/go';
 import { getAiMove } from './lib/ai';
@@ -179,12 +179,12 @@ app.prepare().then(() => {
           if (room.gameState.type === 'chess') {
             nextColor = room.gameState.turn === 'w' ? 'white' : 'black';
           } else {
-            nextColor = room.gameState.currentPlayer;
+            nextColor = (room.gameState as RenjuGameState | GoGameState).currentPlayer;
           }
 
           const nextPlayer = room.players.find(p => p.color === nextColor);
           if (nextPlayer && nextPlayer.isAi) {
-            setTimeout(() => executeAiTurn(roomId), 1000);
+            setTimeout(() => executeAiTurn(roomId), 100);
           }
         }
       }
@@ -305,7 +305,7 @@ app.prepare().then(() => {
     if (room.gameState.type === 'chess') {
       currentPlayerColor = room.gameState.turn === 'w' ? 'white' : 'black';
     } else {
-      currentPlayerColor = room.gameState.currentPlayer;
+      currentPlayerColor = (room.gameState as RenjuGameState | GoGameState).currentPlayer;
     }
 
     const aiPlayer = room.players.find(p => p.isAi && p.color === currentPlayerColor);
@@ -320,12 +320,12 @@ app.prepare().then(() => {
           if (room.gameState.type === 'chess') {
             nextColor = room.gameState.turn === 'w' ? 'white' : 'black';
           } else {
-            nextColor = room.gameState.currentPlayer;
+            nextColor = (room.gameState as RenjuGameState | GoGameState).currentPlayer;
           }
 
           const nextPlayer = room.players.find(p => p.color === nextColor);
           if (nextPlayer && nextPlayer.isAi && room.status === 'playing') {
-            setTimeout(() => executeAiTurn(roomId), 1000);
+            setTimeout(() => executeAiTurn(roomId), 100);
           }
         }
       }
@@ -338,15 +338,12 @@ app.prepare().then(() => {
     // Assign colors only if not already assigned
     if (!room.players[0].color || !room.players[1].color) {
       const isFirstPlayerFirst = Math.random() < 0.5;
-      // Renju/Go/Chess color assignment
+
       if (room.gameType === 'chess') {
         room.players[0].color = isFirstPlayerFirst ? 'white' : 'black';
         room.players[1].color = isFirstPlayerFirst ? 'black' : 'white';
       } else {
-        // Renju/Go: Black goes first (or we just assign random colors and game rules handle who moves)
-        // Ideally:
-        // "Black always plays first" -> This is a game rule.
-        // We just assign who is Black and who is White.
+        // Renju/Go: Black goes first
         room.players[0].color = isFirstPlayerFirst ? 'black' : 'white';
         room.players[1].color = isFirstPlayerFirst ? 'white' : 'black';
       }
@@ -357,24 +354,23 @@ app.prepare().then(() => {
     } else if (room.gameType === 'go') {
       room.gameState = createInitialGoState();
     } else {
-      room.gameState = createInitialState();
+      room.gameState = createInitialRenjuState();
     }
 
     io.to(room.id).emit('room_state_update', room);
     io.to(room.id).emit('game_start', room.gameState);
 
     // AI Check
-    // AI Check
     let firstColor: 'white' | 'black';
     if (room.gameState.type === 'chess') {
       firstColor = room.gameState.turn === 'w' ? 'white' : 'black';
     } else {
-      firstColor = room.gameState.currentPlayer;
+      firstColor = (room.gameState as RenjuGameState | GoGameState).currentPlayer;
     }
 
     const firstPlayer = room.players.find(p => p.color === firstColor);
     if (firstPlayer && firstPlayer.isAi) {
-      setTimeout(() => executeAiTurn(room.id), 1000);
+      setTimeout(() => executeAiTurn(room.id), 100);
     }
   }
 

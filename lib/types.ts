@@ -58,5 +58,6 @@ export interface GoGameState {
 
 export type GameState = RenjuGameState | ChessGameState | GoGameState;
 
+
 export const BOARD_SIZE = 15;
 export const GO_BOARD_SIZE = 19;

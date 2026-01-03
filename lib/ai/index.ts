@@ -32,7 +32,6 @@ export async function getAiMove(gameState: GameState, gameType: GameType): Promi
                 if (moveStr) {
                     // Clean up moveStr (sometimes it might have quotes or extra text if prompt fails)
                     const saneMove = moveStr.replace(/["'\n]/g, '').trim();
-                    // Validate basic SAN?
                     return getChessMoveFromSan(gameState, saneMove);
                 }
             } else if (gameType === 'go' && gameState.type === 'go') {
